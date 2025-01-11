@@ -10,21 +10,12 @@ import {
   Avatar,
   Box,
   Button,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 
-const ProductTable = ({
-  productData,
-  handleModalClose,
-  searchTerm,
-  handleProductSelect,
-  setIsModalOpen,
-}) => {
+const ProductTable = ({ productData, handleModalClose, searchTerm, handleProductSelect,setIsModalOpen }) => {
   const [selectedItems, setSelectedItems] = useState({});
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const [openAlert, setOpenAlert] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
   useState(() => {
     const initialSelectedItems = productData.reduce((acc, product) => {
@@ -38,15 +29,12 @@ const ProductTable = ({
     setSelectedItems(initialSelectedItems);
   });
 
+  //function to filter products based on search
   const filteredProducts = productData.filter((product) =>
     product.title.toLowerCase().includes(searchTerm)
   );
 
   const handleParentCheckboxChange = (productId, variants) => {
-    if (selectedProductId && selectedProductId !== productId) {
-      setOpenAlert(true);
-      return;
-    }
     setSelectedItems((prevSelected) => {
       const isParentSelected = prevSelected[productId]?.selected || false;
       const newVariantsState = variants.reduce(
@@ -56,7 +44,6 @@ const ProductTable = ({
         }),
         {}
       );
-      setSelectedProductId(!isParentSelected ? productId : null);
       return {
         ...prevSelected,
         [productId]: {
@@ -67,15 +54,7 @@ const ProductTable = ({
     });
   };
 
-  const handleCloseAlert = () => {
-    setOpenAlert(false);
-  };
-
   const handleVariantCheckboxChange = (productId, variantId) => {
-    if (selectedProductId && selectedProductId !== productId) {
-      setOpenAlert(true);
-      return;
-    }
     setSelectedItems((prevSelected) => {
       const isVariantSelected =
         prevSelected[productId]?.variants?.[variantId] || false;
@@ -84,33 +63,31 @@ const ProductTable = ({
         [variantId]: !isVariantSelected,
       };
 
-      const anyVariantSelected = Object.values(updatedVariants).some(
+      const allVariantsSelected = Object.values(updatedVariants).every(
         (val) => val
       );
-      setSelectedProductId(anyVariantSelected ? productId : null);
+
       return {
         ...prevSelected,
         [productId]: {
-          selected: anyVariantSelected,
+          selected: allVariantsSelected,
           variants: updatedVariants,
         },
       };
     });
   };
 
+  //function to add products
   const handleAddProducts = () => {
     const selectedList = productData
       .map((product) => {
-        const selectedVariants = Object.entries(
-          selectedItems[product.id]?.variants || {}
-        )
+        const selectedVariants = Object.entries(selectedItems[product.id]?.variants || {})
           .filter(([_, isSelected]) => isSelected)
           .map(([variantId]) =>
-            product.variants.find(
-              (variant) => variant.id.toString() === variantId
-            )
+            product.variants.find(variant => variant.id.toString() === variantId)
           );
-
+  
+        // Only include the product if there are selected variants
         if (selectedVariants.length > 0) {
           return {
             productId: product.id,
@@ -122,10 +99,11 @@ const ProductTable = ({
         return null;
       })
       .filter((item) => item !== null);
-    handleProductSelect(selectedList);
+    setSelectedProducts(selectedList);
+    handleProductSelect(selectedList); 
     setIsModalOpen(false);
   };
-
+  
   return (
     <Box>
       <TableContainer component={Paper}>
@@ -133,7 +111,7 @@ const ProductTable = ({
           <TableBody>
             {filteredProducts.map((product) => (
               <>
-                <TableRow key={`product-${product.id}`}>
+                <TableRow>
                   <TableCell
                     rowSpan={product.variants.length + 1}
                     style={{ padding: "4px", height: "40px" }}
@@ -167,7 +145,7 @@ const ProductTable = ({
                   </TableCell>
                 </TableRow>
                 {product.variants.map((variant) => (
-                  <TableRow key={`variant-${variant.id}`}>
+                  <TableRow key={variant.id}>
                     <TableCell
                       colSpan={3}
                       style={{ padding: "4px", height: "40px" }}
@@ -210,15 +188,9 @@ const ProductTable = ({
           </TableBody>
         </Table>
       </TableContainer>
-      <Box
-        sx={{
-          marginTop: "10px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <Box sx={{ marginTop: "10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <Typography>
+          {" "}
           {
             Object.keys(selectedItems).filter(
               (productId) =>
@@ -230,37 +202,23 @@ const ProductTable = ({
           }{" "}
           Product Selected
         </Typography>
-        <Box sx={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <Button
-            variant="outlined"
-            color="black"
-            sx={{ color: "black" }}
-            onClick={handleModalClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            sx={{ background: "#008060" }}
-            onClick={handleAddProducts}
-          >
-            Add
-          </Button>
-          {/* Snackbar Alert */}
-          <Snackbar
-            open={openAlert}
-            autoHideDuration={3000}
-            onClose={handleCloseAlert}
-          >
-            <Alert
-              onClose={handleCloseAlert}
-              severity="warning"
-              sx={{ width: "100%" }}
-            >
-              You can select only one product at a time.
-            </Alert>
-          </Snackbar>
-        </Box>
+      <Box sx={{display:"flex", gap:"10px", alignItems:"center"}}>
+      <Button
+          variant="outlined"
+          color="black"
+          sx={{ color: "black" }}
+          onClick={handleModalClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          sx={{ background: "#008060" }}
+          onClick={() => handleAddProducts(selectedItems)}
+        >
+          Add
+        </Button>
+      </Box>
       </Box>
     </Box>
   );
