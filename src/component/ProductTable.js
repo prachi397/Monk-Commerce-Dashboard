@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 
-const ProductTable = ({ productData, handleModalClose, searchTerm, handleAddSelectedProducts,setIsModalOpen }) => {
+const ProductTable = ({ productData, handleModalClose, searchTerm, handleProductSelect,setIsModalOpen }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
 
@@ -81,16 +81,13 @@ const ProductTable = ({ productData, handleModalClose, searchTerm, handleAddSele
   const handleAddProducts = () => {
     const selectedList = productData
       .map((product) => {
-        const selectedVariants = Object.entries(
-          selectedItems[product.id]?.variants || {}
-        )
+        const selectedVariants = Object.entries(selectedItems[product.id]?.variants || {})
           .filter(([_, isSelected]) => isSelected)
           .map(([variantId]) =>
-            product.variants.find(
-              (variant) => variant.id.toString() === variantId
-            )
+            product.variants.find(variant => variant.id.toString() === variantId)
           );
-
+  
+        // Only include the product if there are selected variants
         if (selectedVariants.length > 0) {
           return {
             productId: product.id,
@@ -102,13 +99,11 @@ const ProductTable = ({ productData, handleModalClose, searchTerm, handleAddSele
         return null;
       })
       .filter((item) => item !== null);
-
     setSelectedProducts(selectedList);
-    handleAddSelectedProducts(selectedList); 
+    handleProductSelect(selectedList); 
     setIsModalOpen(false);
-    console.log("Selected Products:", selectedList);
   };
-
+  
   return (
     <Box>
       <TableContainer component={Paper}>

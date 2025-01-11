@@ -17,7 +17,7 @@ const AddProductModal = ({
   isModalOpen,
   handleModalClose,
   setIsModalOpen,
-  handleAddSelectedProducts,
+  handleProductSelect
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -78,7 +78,7 @@ const AddProductModal = ({
           handleCancel={handleModalClose}
           searchTerm={searchTerm}
           setIsModalOpen={setIsModalOpen}
-          handleAddSelectedProducts={handleAddSelectedProducts}
+          handleProductSelect={handleProductSelect}
         />
       </Box>
     </Modal>

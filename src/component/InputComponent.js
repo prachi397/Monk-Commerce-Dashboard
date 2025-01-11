@@ -3,14 +3,23 @@ import React, { useState } from "react";
 import { Edit as EditIcon } from "@mui/icons-material";
 import AddProductModal from "./AddProductModal";
 
-const InputComponent = ({handleAddSelectedProducts}) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+const InputComponent = ({
+  handleAddSelectedProducts,
+  selectedProduct,
+  rowIndex,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   function handleEditClick() {
     setIsModalOpen(true);
   }
 
-  function handleModalClose(){
+  function handleModalClose() {
+    setIsModalOpen(false);
+  }
+
+  function handleProductSelect(product) {
+    handleAddSelectedProducts(rowIndex, product);
     setIsModalOpen(false);
   }
 
@@ -20,6 +29,7 @@ const InputComponent = ({handleAddSelectedProducts}) => {
         placeholder="Select Product"
         variant="outlined"
         size="small"
+        value={selectedProduct && selectedProduct[0] ? selectedProduct[0]?.title : ""}
         InputProps={{
           readOnly: true,
           endAdornment: (
@@ -32,7 +42,12 @@ const InputComponent = ({handleAddSelectedProducts}) => {
         }}
         sx={{ width: "100%" }}
       />
-      <AddProductModal isModalOpen={isModalOpen} handleModalClose={handleModalClose} setIsModalOpen={setIsModalOpen} handleAddSelectedProducts={handleAddSelectedProducts}/>
+      <AddProductModal
+        isModalOpen={isModalOpen}
+        handleModalClose={handleModalClose}
+        setIsModalOpen={setIsModalOpen}
+        handleProductSelect={handleProductSelect}
+      />
     </Box>
   );
 };
