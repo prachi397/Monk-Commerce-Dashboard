@@ -11,15 +11,23 @@ import {
   Typography,
   TextField,
   IconButton,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import React, { useState } from "react";
 import InputComponent from "../component/InputComponent";
-import { Close } from "@mui/icons-material"; // Importing Material UI Close icon
+import { Close } from "@mui/icons-material"; 
 
 const Home = () => {
   const [rows, setRows] = useState([1]);
   const [selectedProducts, setSelectedProducts] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
+  const [discounts, setDiscounts] = useState({});
+  const [openAlert, setOpenAlert] = useState(false); 
 
   const handleAddRow = () => {
     setRows([...rows, rows.length + 1]);
@@ -42,17 +50,61 @@ const Home = () => {
   };
 
   // Function to handle removing a variant
-  const handleRemoveVariant = (rowIndex, variantIndex) => {
-    const updatedProducts = selectedProducts[rowIndex].filter(
-      (product, index) => index !== variantIndex
-    );
-    setSelectedProducts((prevSelectedProducts) => ({
-      ...prevSelectedProducts,
-      [rowIndex]: updatedProducts,
+  const handleRemoveVariant = (rowIndex, variantId) => {
+    setSelectedProducts((prevSelectedProducts) => {
+      const updatedSelectedProducts = { ...prevSelectedProducts };
+      const currentProduct = updatedSelectedProducts[rowIndex];
+  
+      if (!currentProduct || !Array.isArray(currentProduct)) return updatedSelectedProducts;
+  
+      const updatedVariants = currentProduct[0]?.variants.filter(
+        (variant) => variant.id !== variantId
+      );
+  
+      if (updatedVariants.length === 0) {
+        delete updatedSelectedProducts[rowIndex];
+        setDiscounts((prevDiscounts) => {
+          const updatedDiscounts = { ...prevDiscounts };
+          delete updatedDiscounts[rowIndex];
+          return updatedDiscounts;
+        });
+      } else {
+        updatedSelectedProducts[rowIndex][0].variants = updatedVariants;
+      }
+  
+      return updatedSelectedProducts;
+    });
+  };
+
+  // Handle discount value and type change
+  const handleDiscountChange = (rowIndex, field, value) => {
+    setDiscounts((prevDiscounts) => ({
+      ...prevDiscounts,
+      [rowIndex]: {
+        ...prevDiscounts[rowIndex],
+        [field]: value,
+      },
     }));
   };
 
+  // Function to handle "Add Discount" click
+  const handleAddDiscount = (rowIndex) => {
+    if (!selectedProducts[rowIndex] || !selectedProducts[rowIndex].length) {
+      setOpenAlert(true);
+      return;
+    }
+    setDiscounts((prev) => ({
+      ...prev,
+      [rowIndex]: { discountValue: "", discountType: "%" },
+    }));
+  };
+
+  const handleCloseAlert = () => {
+    setOpenAlert(false); 
+  };
+
   console.log(selectedProducts);
+
   return (
     <Box
       sx={{
@@ -69,7 +121,7 @@ const Home = () => {
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ boxShadow: "none", width: { xs: "100%", sm: "80%", md: "60%" } }}
+        sx={{ boxShadow: "none", width: { xs: "100%", sm: "80%", md: "70%" } }}
       >
         <Table sx={{ borderCollapse: "collapse", width: "100%" }}>
           <TableHead>
@@ -82,7 +134,6 @@ const Home = () => {
               </TableCell>
             </TableRow>
           </TableHead>
-          {/* Table Body */}
           <TableBody>
             {rows.map((row, idx) => (
               <>
@@ -109,17 +160,48 @@ const Home = () => {
                       padding: { xs: "4px", sm: "8px 16px" },
                     }}
                   >
-                    <Button
-                      variant="contained"
-                      sx={{
-                        background: "#008060",
-                        "&:hover": { background: "#006b4f" },
-                        fontSize: { xs: "12px", sm: "14px" },
-                        padding: { xs: "6px 12px", sm: "8px 16px" },
-                      }}
-                    >
-                      Add Discount
-                    </Button>
+                    {/* show "Add Discount" button */}
+                    {!discounts[idx] ? (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          background: "#008060",
+                          "&:hover": { background: "#006b4f" },
+                          fontSize: { xs: "12px", sm: "14px" },
+                          padding: { xs: "6px 12px", sm: "8px 16px" },
+                        }}
+                        onClick={() => handleAddDiscount(idx)}
+                      >
+                        Add Discount
+                      </Button>
+                    ) : (
+                      // Show input fields for discount value and discount type
+                      <>
+                        <TextField
+                          value={discounts[idx].discountValue}
+                          onChange={(e) =>
+                            handleDiscountChange(idx, "discountValue", e.target.value)
+                          }
+                          variant="outlined"
+                          sx={{ width: "20%", marginRight: "8px" }}
+                          type="number"
+                          size="small"
+                        />
+                        <FormControl sx={{ width: "20%" }}>
+                          <InputLabel>Discount Type</InputLabel>
+                          <Select
+                            value={discounts[idx].discountType}
+                            onChange={(e) =>
+                              handleDiscountChange(idx, "discountType", e.target.value)
+                            }
+                            size="small"
+                          >
+                            <MenuItem value="%">% Off</MenuItem>
+                            <MenuItem value="flat">Flat Off</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </>
+                    )}
                     {/* Show/Hide Variants Button */}
                     {selectedProducts[idx] &&
                       Array.isArray(selectedProducts[idx]) && (
@@ -132,9 +214,7 @@ const Home = () => {
                           }}
                           onClick={() => handleToggleVariants(idx)}
                         >
-                          {expandedRows[idx]
-                            ? "Hide variants"
-                            : "Show variants"}
+                          {expandedRows[idx] ? "Hide variants" : "Show variants"}
                         </Button>
                       )}
                   </TableCell>
@@ -143,13 +223,13 @@ const Home = () => {
                   Array.isArray(selectedProducts[idx]) &&
                   selectedProducts[idx].map((product, productIdx) => (
                     <TableRow key={productIdx} sx={{ border: "none" }}>
-                      <TableCell colSpan={2} sx={{ border: "none", padding:"0" }}>
+                      <TableCell colSpan={2} sx={{ border: "none", padding: "0" }}>
                         {expandedRows[idx] && product?.variants?.length > 0 ? (
                           <div>
                             <ul>
-                              {product.variants.map((variant, variantIdx) => (
+                              {product.variants.map((variant) => (
                                 <li
-                                  key={variantIdx}
+                                  key={variant.id}
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
@@ -163,17 +243,17 @@ const Home = () => {
                                     sx={{
                                       width: "80%",
                                       marginRight: "8px",
-                                    }}       
+                                    }}
                                     InputProps={{
                                       style: {
-                                        borderRadius: "30px", 
-                                  
+                                        borderRadius: "30px",
                                       },
                                     }}
                                   />
                                   <IconButton
+                                    onClick={() => handleRemoveVariant(idx, variant.id)}
                                   >
-                                    <Close /> 
+                                    <Close />
                                   </IconButton>
                                 </li>
                               ))}
@@ -190,9 +270,8 @@ const Home = () => {
       </TableContainer>
       <Button
         variant="outlined"
-        color= "#008060"
+        color="primary"
         sx={{
-          color: "#008060",
           marginTop: "20px",
           height: { xs: "40px", sm: "52px" },
           width: { xs: "150px", sm: "200px" },
@@ -202,7 +281,19 @@ const Home = () => {
       >
         Add Product
       </Button>
+
+      {/* Snackbar Alert */}
+      <Snackbar
+        open={openAlert}
+        autoHideDuration={3000}
+        onClose={handleCloseAlert}
+      >
+        <Alert onClose={handleCloseAlert} severity="warning" sx={{ width: "100%" }}>
+          Please select a product before adding a discount!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
+
 export default Home;
