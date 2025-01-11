@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Box,
@@ -14,6 +14,11 @@ import ProductTable from "./ProductTable";
 import { productData } from "./sampleData";
 
 const AddProductModal = ({ isModalOpen, handleModalClose }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value.toLowerCase());
+  };
   return (
     <Modal
       open={isModalOpen}
@@ -49,6 +54,8 @@ const AddProductModal = ({ isModalOpen, handleModalClose }) => {
           <TextField
             placeholder="Search Product"
             variant="outlined"
+            value={searchTerm}
+            onChange={handleSearchChange}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -61,7 +68,7 @@ const AddProductModal = ({ isModalOpen, handleModalClose }) => {
             }}
           />
         </Box>
-        <ProductTable productData={productData} />
+        <ProductTable productData={productData} handleCancel = {handleModalClose} searchTerm={searchTerm}/>
       </Box>
     </Modal>
   );
