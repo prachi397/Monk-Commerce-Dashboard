@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Edit as EditIcon } from "@mui/icons-material";
 import AddProductModal from "./AddProductModal";
 
-const InputComponent = () => {
+const InputComponent = ({handleAddSelectedProducts}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
   function handleEditClick() {
@@ -32,7 +32,7 @@ const InputComponent = () => {
         }}
         sx={{ width: "100%" }}
       />
-      <AddProductModal isModalOpen={isModalOpen} handleModalClose={handleModalClose}/>
+      <AddProductModal isModalOpen={isModalOpen} handleModalClose={handleModalClose} setIsModalOpen={setIsModalOpen} handleAddSelectedProducts={handleAddSelectedProducts}/>
     </Box>
   );
 };

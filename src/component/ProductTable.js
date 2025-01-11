@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 
-const ProductTable = ({ productData, handleModalClose, searchTerm }) => {
+const ProductTable = ({ productData, handleModalClose, searchTerm, handleAddSelectedProducts,setIsModalOpen }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
 
@@ -104,6 +104,8 @@ const ProductTable = ({ productData, handleModalClose, searchTerm }) => {
       .filter((item) => item !== null);
 
     setSelectedProducts(selectedList);
+    handleAddSelectedProducts(selectedList); 
+    setIsModalOpen(false);
     console.log("Selected Products:", selectedList);
   };
 

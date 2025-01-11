@@ -13,7 +13,12 @@ import SearchIcon from "@mui/icons-material/Search";
 import ProductTable from "./ProductTable";
 import { productData } from "./sampleData";
 
-const AddProductModal = ({ isModalOpen, handleModalClose }) => {
+const AddProductModal = ({
+  isModalOpen,
+  handleModalClose,
+  setIsModalOpen,
+  handleAddSelectedProducts,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (event) => {
@@ -68,7 +73,13 @@ const AddProductModal = ({ isModalOpen, handleModalClose }) => {
             }}
           />
         </Box>
-        <ProductTable productData={productData} handleCancel = {handleModalClose} searchTerm={searchTerm}/>
+        <ProductTable
+          productData={productData}
+          handleCancel={handleModalClose}
+          searchTerm={searchTerm}
+          setIsModalOpen={setIsModalOpen}
+          handleAddSelectedProducts={handleAddSelectedProducts}
+        />
       </Box>
     </Modal>
   );
