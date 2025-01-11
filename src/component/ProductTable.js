@@ -86,8 +86,6 @@ const ProductTable = ({ productData, handleModalClose, searchTerm, handleProduct
           .map(([variantId]) =>
             product.variants.find(variant => variant.id.toString() === variantId)
           );
-  
-        // Only include the product if there are selected variants
         if (selectedVariants.length > 0) {
           return {
             productId: product.id,
@@ -98,12 +96,12 @@ const ProductTable = ({ productData, handleModalClose, searchTerm, handleProduct
         }
         return null;
       })
-      .filter((item) => item !== null);
+      .filter((item) => item !== null);  
     setSelectedProducts(selectedList);
     handleProductSelect(selectedList); 
     setIsModalOpen(false);
   };
-  
+
   return (
     <Box>
       <TableContainer component={Paper}>

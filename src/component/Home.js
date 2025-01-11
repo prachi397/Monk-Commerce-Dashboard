@@ -37,14 +37,29 @@ const Home = () => {
   const handleAddRow = () => {
     setRows([...rows, rows.length + 1]);
   };
-
+  
   // Function to handle adding products to the selected products list for a specific row
-  const handleAddSelectedProducts = (rowIndex, product) => {
-    setSelectedProducts((prevSelectedProducts) => ({
-      ...prevSelectedProducts,
-      [rowIndex]: product,
-    }));
-  };
+const handleAddSelectedProducts = (rowIndex, products) => {
+  setSelectedProducts((prevSelectedProducts) => {
+    const updatedProducts = { ...prevSelectedProducts };
+    products.forEach((product, idx) => {
+      if (!updatedProducts[rowIndex + idx]) {
+        updatedProducts[rowIndex + idx] = [];
+      }
+      updatedProducts[rowIndex + idx].push(product);
+    });
+    return updatedProducts;
+  });
+  setRows((prevRows) => {
+    const newRows = [...prevRows];
+    if (products.length > 1) {
+      for (let i = 1; i < products.length; i++) {
+        newRows.push(newRows.length + 1);
+      }
+    }
+    return newRows;
+  });
+};
 
   // Function to toggle visibility of variants for a particular row
   const handleToggleVariants = (rowIndex) => {
@@ -59,14 +74,11 @@ const Home = () => {
     setSelectedProducts((prevSelectedProducts) => {
       const updatedSelectedProducts = { ...prevSelectedProducts };
       const currentProduct = updatedSelectedProducts[rowIndex];
-
       if (!currentProduct || !Array.isArray(currentProduct))
         return updatedSelectedProducts;
-
       const updatedVariants = currentProduct[0]?.variants.filter(
         (variant) => variant.id !== variantId
       );
-
       if (updatedVariants.length === 0) {
         delete updatedSelectedProducts[rowIndex];
         setDiscounts((prevDiscounts) => {
@@ -93,7 +105,7 @@ const Home = () => {
     }));
   };
 
-  // Function to handle "Add Discount" click
+  // Function to handle Add Discount button
   const handleAddDiscount = (rowIndex) => {
     if (!selectedProducts[rowIndex] || !selectedProducts[rowIndex].length) {
       setOpenAlert(true);
@@ -105,14 +117,11 @@ const Home = () => {
     }));
   };
 
-  // Move rows within the table
   const moveRow = (fromIndex, toIndex) => {
     const updatedRows = [...rows];
     const [movedRow] = updatedRows.splice(fromIndex, 1);
     updatedRows.splice(toIndex, 0, movedRow);
     setRows(updatedRows);
-
-    // Ensure selectedProducts and discounts are reordered
     setSelectedProducts((prev) => {
       const reorderedProducts = {};
       updatedRows.forEach((row, idx) => {
@@ -145,8 +154,6 @@ const Home = () => {
   const handleCloseAlert = () => {
     setOpenAlert(false);
   };
-
-  console.log(selectedProducts);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -247,12 +254,11 @@ const Home = () => {
                               )
                             }
                             variant="outlined"
-                            sx={{ width: "20%", marginRight: "8px" }}
+                            sx={{ width: "25%", marginRight: "8px" }}
                             type="number"
                             size="small"
                           />
-                          <FormControl sx={{ width: "20%" }}>
-                            <InputLabel>Discount Type</InputLabel>
+                          <FormControl sx={{ width: "25%" }}>
                             <Select
                               value={discounts[idx].discountType}
                               onChange={(e) =>
