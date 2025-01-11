@@ -13,7 +13,6 @@ import {
   IconButton,
   Select,
   MenuItem,
-  InputLabel,
   FormControl,
   Snackbar,
   Alert,
@@ -121,7 +120,12 @@ const handleAddSelectedProducts = (rowIndex, products) => {
     const updatedRows = [...rows];
     const [movedRow] = updatedRows.splice(fromIndex, 1);
     updatedRows.splice(toIndex, 0, movedRow);
+    const updatedExpandedRows = { ...expandedRows };
+    if (expandedRows[fromIndex]) {
+      updatedExpandedRows[fromIndex] = false;
+    } 
     setRows(updatedRows);
+    setExpandedRows(updatedExpandedRows);  
     setSelectedProducts((prev) => {
       const reorderedProducts = {};
       updatedRows.forEach((row, idx) => {
@@ -136,7 +140,7 @@ const handleAddSelectedProducts = (rowIndex, products) => {
       });
       return reorderedDiscounts;
     });
-  };
+  };  
 
   // Move variants within a row
   const moveVariant = (rowIndex, fromIndex, toIndex) => {
@@ -175,6 +179,7 @@ const handleAddSelectedProducts = (rowIndex, products) => {
           sx={{
             boxShadow: "none",
             width: { xs: "100%", sm: "80%", md: "70%" },
+            marginTop: { xs: "10px", sm: "20px" },
           }}
         >
           <Table sx={{ borderCollapse: "collapse", width: "100%" }}>
@@ -191,7 +196,6 @@ const handleAddSelectedProducts = (rowIndex, products) => {
             <TableBody>
               {rows.map((row, idx) => (
                 <>
-                  {/* <TableRow key={idx} sx={{ border: "none" }}> */}
                   <DraggableRow
                     key={idx}
                     id={row}
@@ -231,10 +235,10 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                         <Button
                           variant="contained"
                           sx={{
-                            width:"200px",
+                            width:{xs:"70px", sm:"200px"},
                             background: "#008060",
                             "&:hover": { background: "#006b4f" },
-                            fontSize: { xs: "12px", sm: "14px" },
+                            fontSize: { xs: "10px", sm: "14px" },
                             padding: { xs: "6px 12px", sm: "8px 16px" },
                           }}
                           onClick={() => handleAddDiscount(idx)}
@@ -245,7 +249,7 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                         // Show input fields for discount value and discount type
                         <>
                           <TextField
-                            value={discounts[idx].discountValue}
+                            value={discounts[idx].discountValue||0}
                             onChange={(e) =>
                               handleDiscountChange(
                                 idx,
@@ -331,6 +335,7 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                                       value={variant.title}
                                       variant="outlined"
                                       disabled
+                                       size="small"
                                       sx={{
                                         width: "80%",
                                         marginRight: "30px",
