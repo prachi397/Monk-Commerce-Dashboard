@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Box,
@@ -6,19 +6,51 @@ import {
   IconButton,
   InputAdornment,
   TextField,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import ProductTable from "./ProductTable";
-import { productData } from "./sampleData";
+import axios from "axios";
+// import { productData } from "./sampleData";
 
 const AddProductModal = ({
   isModalOpen,
   handleModalClose,
   setIsModalOpen,
-  handleProductSelect
+  handleProductSelect,
+  searchTerm,
+  setSearchTerm
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [productData, setProductData] = useState([]);
+  const [loading, setLoading] = useState(false); 
+
+  useEffect(() => {
+    if (isModalOpen) {
+      fetchProductData(searchTerm, 1, 10); 
+    }
+  }, [searchTerm, isModalOpen]);
+  
+//function to fetch the product data
+  async function fetchProductData(search = "", page = 0, limit = 10) {
+    const url = "https://stageapi.monkcommerce.app/task/products/search";
+    const apiKey = "72njgfa948d9aS7gs5"; 
+    setLoading(true);
+    try {
+      const response = await axios.get(url, {
+        params: { search, page, limit }, 
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey, 
+        },
+      });
+      setProductData(response.data || []); 
+    } catch (err) {
+      console.error("Error fetching data:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
@@ -72,16 +104,30 @@ const AddProductModal = ({
             }}
           />
         </Box>
-        <ProductTable
-          productData={productData}
-          handleCancel={handleModalClose}
-          searchTerm={searchTerm}
-          setIsModalOpen={setIsModalOpen}
-          handleProductSelect={handleProductSelect}
-        />
+        {loading ? ( 
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "300px", 
+            }}
+          >
+            <CircularProgress style={{color:"green"}}/>
+          </Box>
+        ) : (
+          <ProductTable
+            productData={productData}
+            handleModalClose={handleModalClose}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}  
+            setIsModalOpen={setIsModalOpen}
+            handleProductSelect={handleProductSelect}
+          />
+        )}
       </Box>
     </Modal>
-  );
+  )
 };
 
 export default AddProductModal;

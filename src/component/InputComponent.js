@@ -9,6 +9,7 @@ const InputComponent = ({
   rowIndex,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   function handleEditClick() {
     setIsModalOpen(true);
@@ -16,6 +17,7 @@ const InputComponent = ({
 
   function handleModalClose() {
     setIsModalOpen(false);
+    setSearchTerm("");
   }
 
   function handleProductSelect(product) {
@@ -47,6 +49,8 @@ const InputComponent = ({
         handleModalClose={handleModalClose}
         setIsModalOpen={setIsModalOpen}
         handleProductSelect={handleProductSelect}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
       />
     </Box>
   );
