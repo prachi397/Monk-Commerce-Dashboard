@@ -28,7 +28,7 @@ const AddProductModal = ({
 
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
- 
+
   useEffect(() => {
     if (isModalOpen) {
       fetchProductData(searchTerm, currentPage, limit);
