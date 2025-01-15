@@ -262,7 +262,7 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                             type="number"
                             size="small"
                           />
-                          <FormControl sx={{ width: "25%" }}>
+                          <FormControl sx={{width:"22%"}}>
                             <Select
                               value={discounts[idx].discountType}
                               onChange={(e) =>

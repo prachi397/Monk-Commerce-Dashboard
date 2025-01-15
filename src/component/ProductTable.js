@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Table,
   TableBody,
@@ -14,7 +21,8 @@ import {
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 
-const ProductTable = memo(({
+const ProductTable = memo(
+  ({
     productData,
     handleModalClose,
     setSearchTerm,
@@ -24,13 +32,16 @@ const ProductTable = memo(({
     handleProductSelect,
     setIsModalOpen,
   }) => {
-  const [selectedItems, setSelectedItems] = useState({});
+    const [selectedItems, setSelectedItems] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [isFetching, setIsFetching] = useState(false);
 
     const tableRef = useRef(null);
 
-  useState(() => {
-      if (productData.length > 0) {
+    console.log("Visibl", productData);
+
+    useState(() => {
+      if (productData && productData?.length > 0) {
         const initialSelectedItems = productData.reduce((acc, product) => {
           const variantsState = product.variants.reduce(
             (variantAcc, variant) => ({ ...variantAcc, [variant.id]: false }),
@@ -39,39 +50,49 @@ const ProductTable = memo(({
           acc[product.id] = { selected: false, variants: variantsState };
           return acc;
         }, {});
-      setSelectedItems(initialSelectedItems);
+        setSelectedItems(initialSelectedItems);
       }
     }, [productData]);
 
     const handleParentCheckboxChange = (productId, variants) => {
-    setSelectedItems((prevSelected) => {
-      const isParentSelected = prevSelected[productId]?.selected || false;
-      const newVariantsState = variants.reduce(
-            (acc, variant) => ({
-              ...acc,
-          [variant.id]: !isParentSelected,
-            }),
-            {}
-      );
-      return {
-        ...prevSelected,
-        [productId]: {
-          selected: !isParentSelected,
-          variants: newVariantsState,
-        },
-      };
-    });
+      setSelectedItems((prevSelected) => {
+        const isParentSelected = prevSelected[productId]?.selected || false;
+        const newVariantsState = variants.reduce(
+          (acc, variant) => ({
+            ...acc,
+            [variant.id]: !isParentSelected,
+          }),
+          {}
+        );
+        return {
+          ...prevSelected,
+          [productId]: {
+            selected: !isParentSelected,
+            variants: newVariantsState,
+          },
+        };
+      });
     };
 
-    const handleScroll = useCallback(() => {
-      if (tableRef.current && !loading && hasMore) {
-      const bottom = tableRef.current.scrollHeight - tableRef.current.scrollTop - tableRef.current.clientHeight < 10;
-        if (bottom) {
-          setCurrentPage((prevPage) => prevPage + 1);
-        }
-      }
-    }, [loading, hasMore]);
+    // Debounce Scroll Handler
+    const handleScrollDebounce = useRef(false);
 
+    //function to perform scrolling
+    const handleScroll = () => {
+      if (loading || !hasMore || handleScrollDebounce.current) return;
+      if (
+        tableRef.current.scrollHeight - tableRef.current.scrollTop <=
+        tableRef.current.clientHeight + 10
+      ) {
+        handleScrollDebounce.current = true;
+        setIsFetching(true);
+        setTimeout(() => {
+          setCurrentPage((prev) => prev + 1);
+          setIsFetching(false);
+          handleScrollDebounce.current = false;
+        }, 1000);
+      }
+    };
 
     useEffect(() => {
       const tableContainer = tableRef.current;
@@ -84,37 +105,38 @@ const ProductTable = memo(({
         }
       };
     }, [handleScroll]);
+
     const memoizedRows = useMemo(() => productData, [productData]);
 
     const handleVariantCheckboxChange = (productId, variantId) => {
-    setSelectedItems((prevSelected) => {
-      const isVariantSelected =
-        prevSelected[productId]?.variants?.[variantId] || false;
-      const updatedVariants = {
-        ...prevSelected[productId]?.variants,
-        [variantId]: !isVariantSelected,
-      };
+      setSelectedItems((prevSelected) => {
+        const isVariantSelected =
+          prevSelected[productId]?.variants?.[variantId] || false;
+        const updatedVariants = {
+          ...prevSelected[productId]?.variants,
+          [variantId]: !isVariantSelected,
+        };
 
-      const allVariantsSelected = Object.values(updatedVariants).every(
-        (val) => val
-      );
+        const allVariantsSelected = Object.values(updatedVariants).every(
+          (val) => val
+        );
 
-      return {
-        ...prevSelected,
-        [productId]: {
-          selected: allVariantsSelected,
-          variants: updatedVariants,
-        },
-      };
-    });
-  };
+        return {
+          ...prevSelected,
+          [productId]: {
+            selected: allVariantsSelected,
+            variants: updatedVariants,
+          },
+        };
+      });
+    };
 
-  //function to add products
+    //function to add products
     const handleAddProducts = () => {
       const selectedList = productData
         .map((product) => {
           const selectedVariants = Object.entries(
-          selectedItems[product.id]?.variants || {}
+            selectedItems[product.id]?.variants || {}
           )
             .filter(([_, isSelected]) => isSelected)
             .map(([variantId]) =>
@@ -158,12 +180,12 @@ const ProductTable = memo(({
                       >
                         <div style={{ display: "flex", alignItems: "center" }}>
                           <Checkbox
-                          checked={!!selectedItems[product.id]?.selected}
+                            checked={!!selectedItems[product.id]?.selected}
                             onChange={() =>
-                            handleParentCheckboxChange(
-                              product.id,
-                              product.variants
-                            )
+                              handleParentCheckboxChange(
+                                product.id,
+                                product.variants
+                              )
                             }
                             sx={{
                               "&.Mui-checked": {
@@ -176,7 +198,9 @@ const ProductTable = memo(({
                             alt={product.title}
                             sx={{ marginRight: 2 }}
                           />
-                          <Typography variant="body1">{product.title}</Typography>
+                          <Typography variant="body1">
+                            {product.title}
+                          </Typography>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -194,16 +218,16 @@ const ProductTable = memo(({
                             }}
                           >
                             <Checkbox
-                            checked={
-                              !!selectedItems[product.id]?.variants?.[
-                                variant.id
-                              ]
-                            }
+                              checked={
+                                !!selectedItems[product.id]?.variants?.[
+                                  variant.id
+                                ]
+                              }
                               onChange={() =>
-                              handleVariantCheckboxChange(
-                                product.id,
-                                variant.id
-                              )
+                                handleVariantCheckboxChange(
+                                  product.id,
+                                  variant.id
+                                )
                               }
                               sx={{
                                 "&.Mui-checked": {
@@ -226,7 +250,7 @@ const ProductTable = memo(({
                     ))}
                   </>
                 ))}
-                {loading && (
+                {(loading || isFetching) && ( // Show loader during debounce
                   <TableRow>
                     <TableCell colSpan={4} align="center">
                       <CircularProgress style={{ color: "green" }} />
@@ -250,10 +274,10 @@ const ProductTable = memo(({
           <Typography>
             {" "}
             {
-            Object.keys(selectedItems).filter(
+              Object.keys(selectedItems).filter(
                 (productId) =>
-                selectedItems[productId]?.selected ||
-                Object.values(selectedItems[productId]?.variants || {}).some(
+                  selectedItems[productId]?.selected ||
+                  Object.values(selectedItems[productId]?.variants || {}).some(
                     (isSelected) => isSelected
                   )
               ).length
@@ -272,7 +296,7 @@ const ProductTable = memo(({
             <Button
               variant="contained"
               sx={{ background: "#008060" }}
-            onClick={() => handleAddProducts(selectedItems)}
+              onClick={() => handleAddProducts(selectedItems)}
             >
               Add
             </Button>
@@ -280,6 +304,10 @@ const ProductTable = memo(({
         </Box>
       </Box>
     );
-});
+  },
+  (prevProps, nextProp) => {
+    return prevProps.productData === nextProp.productData;
+  }
+);
 
 export default ProductTable;

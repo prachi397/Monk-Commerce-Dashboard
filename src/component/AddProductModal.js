@@ -26,20 +26,29 @@ const AddProductModal = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); 
 
+  const productDataRef = useRef([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
 
   useEffect(() => {
     if (isModalOpen) {
       fetchProductData(searchTerm, currentPage, limit);
-    }
-    else {
+    } else {
+      productDataRef.current = [];
       setProductData([]);
       setCurrentPage(1);
       setHasMore(true);
       setSearchTerm("");
     }
-  }, [searchTerm, isModalOpen, currentPage]);
+  }, [searchTerm,isModalOpen]);
+  
+  // Fetch data when the page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchProductData(searchTerm, currentPage, limit);
+    }
+  }, [currentPage,searchTerm]);
 
 
   //function to fetch the product data
@@ -56,11 +65,11 @@ const AddProductModal = ({
           "x-api-key": apiKey,
         },
       });
-      // setProductData((prevData) => [...prevData, ...response.data]);
       if (response.data.length === 0) {
-        setHasMore(false); // No more data to load
+        setHasMore(false); 
       } else {
-        setProductData((prevData) => [...prevData, ...response.data]);
+        productDataRef.current = [...productDataRef.current, ...response.data]; 
+        setProductData([...productDataRef.current]); 
       }
     } catch (err) {
       console.error("Error fetching data:", err.message);
@@ -70,9 +79,12 @@ const AddProductModal = ({
   }
   
   const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value.toLowerCase());
-    setCurrentPage(1);  
-    setProductData([]);
+    const newSearchTerm = event.target.value.toLowerCase();
+    setSearchTerm(newSearchTerm);
+    setCurrentPage(1); 
+    productDataRef.current = []; 
+    setProductData([]); 
+    setHasMore(true)
   };
 
   return (
@@ -124,7 +136,7 @@ const AddProductModal = ({
             }}
           />
         </Box>
-        {loading ? (
+        {loading && productData.length === 0 ? (
           <Box
             sx={{
               display: "flex",
@@ -139,13 +151,12 @@ const AddProductModal = ({
           <ProductTable
             productData={productData}
             handleModalClose={handleModalClose}
-            searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             setIsModalOpen={setIsModalOpen}
             handleProductSelect={handleProductSelect}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            hasMore = {hasMore}
+            hasMore={hasMore}
             loading={loading}
           />
         )}
