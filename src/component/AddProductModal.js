@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
   Box,
@@ -20,41 +20,49 @@ const AddProductModal = ({
   setIsModalOpen,
   handleProductSelect,
   searchTerm,
-  setSearchTerm
+  setSearchTerm,
 }) => {
   const [productData, setProductData] = useState([]);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+ 
   useEffect(() => {
     if (isModalOpen) {
-      fetchProductData(searchTerm, 1, 10); 
+      fetchProductData(searchTerm, currentPage, limit);
     }
-  }, [searchTerm, isModalOpen]);
-  
-//function to fetch the product data
-  async function fetchProductData(search = "", page = 0, limit = 10) {
+  }, [searchTerm, isModalOpen, currentPage]);
+
+
+  //function to fetch the product data
+  async function fetchProductData(search = "", page, limit) {
     const url = "https://stageapi.monkcommerce.app/task/products/search";
-    const apiKey = "72njgfa948d9aS7gs5"; 
+    const apiKey = "72njgfa948d9aS7gs5";
+    if (loading) return;
     setLoading(true);
     try {
       const response = await axios.get(url, {
-        params: { search, page, limit }, 
+        params: { search, page, limit },
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey, 
+          "x-api-key": apiKey,
         },
       });
-      setProductData(response.data || []); 
+      setProductData((prevData) => [...prevData, ...response.data]);
     } catch (err) {
       console.error("Error fetching data:", err.message);
     } finally {
       setLoading(false);
     }
   }
-
+  
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
+    setCurrentPage(1);  
+    setProductData([]);
   };
+
   return (
     <Modal
       open={isModalOpen}
@@ -104,30 +112,33 @@ const AddProductModal = ({
             }}
           />
         </Box>
-        {loading ? ( 
+        {loading ? (
           <Box
             sx={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "300px", 
+              height: "300px",
             }}
           >
-            <CircularProgress style={{color:"green"}}/>
+            <CircularProgress style={{ color: "green" }} />
           </Box>
         ) : (
           <ProductTable
             productData={productData}
             handleModalClose={handleModalClose}
             searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}  
+            setSearchTerm={setSearchTerm}
             setIsModalOpen={setIsModalOpen}
             handleProductSelect={handleProductSelect}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            loading={loading}
           />
         )}
       </Box>
     </Modal>
-  )
+  );
 };
 
 export default AddProductModal;

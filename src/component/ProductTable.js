@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,13 +16,17 @@ import Paper from "@mui/material/Paper";
 const ProductTable = ({
   productData,
   handleModalClose,
-  searchTerm,
   setSearchTerm,
+  currentPage,
+  setCurrentPage,
+  loading,
   handleProductSelect,
   setIsModalOpen,
 }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
+
+  const tableRef = useRef(null); 
 
   useState(() => {
     if (productData.length > 0) {
@@ -37,11 +41,6 @@ const ProductTable = ({
       setSelectedItems(initialSelectedItems);
     }
   }, [productData]);
-
-  //function to filter products based on search
-  const filteredProducts = productData.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleParentCheckboxChange = (productId, variants) => {
     setSelectedItems((prevSelected) => {
@@ -62,6 +61,27 @@ const ProductTable = ({
       };
     });
   };
+
+  const handleScroll = () => {
+    if (tableRef.current && !loading) {
+      const bottom = tableRef.current.scrollHeight - tableRef.current.scrollTop - tableRef.current.clientHeight < 10; 
+      if (bottom) {
+        setCurrentPage((prevPage) => prevPage + 1);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const tableContainer = tableRef.current;
+    if (tableContainer) {
+      tableContainer.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (tableContainer) {
+        tableContainer.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [loading]);
 
   const handleVariantCheckboxChange = (productId, variantId) => {
     setSelectedItems((prevSelected) => {
@@ -118,11 +138,11 @@ const ProductTable = ({
 
   return (
     <Box>
-      <Box sx={{ maxHeight: "50vh", overflowY: "auto" }}>
+      <Box sx={{ maxHeight: "50vh", overflowY: "auto" }} ref={tableRef}>
         <TableContainer component={Paper}>
           <Table size="small">
             <TableBody>
-              {filteredProducts.map((product) => (
+              {productData.map((product) => (
                 <>
                   <TableRow>
                     <TableCell
