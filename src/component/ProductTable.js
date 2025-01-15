@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,14 +10,15 @@ import {
   Avatar,
   Box,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 
-const ProductTable = ({
+const ProductTable = memo(({
   productData,
   handleModalClose,
   setSearchTerm,
-  currentPage,
+  hasMore,
   setCurrentPage,
   loading,
   handleProductSelect,
@@ -62,14 +63,15 @@ const ProductTable = ({
     });
   };
 
-  const handleScroll = () => {
-    if (tableRef.current && !loading) {
-      const bottom = tableRef.current.scrollHeight - tableRef.current.scrollTop - tableRef.current.clientHeight < 10; 
+  const handleScroll = useCallback(() => {
+    if (tableRef.current && !loading && hasMore) {
+      const bottom = tableRef.current.scrollHeight - tableRef.current.scrollTop - tableRef.current.clientHeight < 10;
       if (bottom) {
         setCurrentPage((prevPage) => prevPage + 1);
       }
     }
-  };
+  }, [loading, hasMore]);
+  
 
   useEffect(() => {
     const tableContainer = tableRef.current;
@@ -81,7 +83,8 @@ const ProductTable = ({
         tableContainer.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [loading]);
+  }, [handleScroll]);
+  const memoizedRows = useMemo(() => productData, [productData]);
 
   const handleVariantCheckboxChange = (productId, variantId) => {
     setSelectedItems((prevSelected) => {
@@ -142,7 +145,7 @@ const ProductTable = ({
         <TableContainer component={Paper}>
           <Table size="small">
             <TableBody>
-              {productData.map((product) => (
+              {memoizedRows.map((product) => (
                 <>
                   <TableRow>
                     <TableCell
@@ -223,6 +226,13 @@ const ProductTable = ({
                   ))}
                 </>
               ))}
+               {loading && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    <CircularProgress style={{ color: "green" }} />
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -270,6 +280,6 @@ const ProductTable = ({
       </Box>
     </Box>
   );
-};
+});
 
 export default ProductTable;

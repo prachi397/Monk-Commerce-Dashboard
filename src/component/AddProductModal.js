@@ -24,6 +24,7 @@ const AddProductModal = ({
 }) => {
   const [productData, setProductData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true); 
 
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
@@ -31,6 +32,12 @@ const AddProductModal = ({
   useEffect(() => {
     if (isModalOpen) {
       fetchProductData(searchTerm, currentPage, limit);
+    }
+    else {
+      setProductData([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      setSearchTerm("");
     }
   }, [searchTerm, isModalOpen, currentPage]);
 
@@ -49,7 +56,12 @@ const AddProductModal = ({
           "x-api-key": apiKey,
         },
       });
-      setProductData((prevData) => [...prevData, ...response.data]);
+      // setProductData((prevData) => [...prevData, ...response.data]);
+      if (response.data.length === 0) {
+        setHasMore(false); // No more data to load
+      } else {
+        setProductData((prevData) => [...prevData, ...response.data]);
+      }
     } catch (err) {
       console.error("Error fetching data:", err.message);
     } finally {
@@ -133,6 +145,7 @@ const AddProductModal = ({
             handleProductSelect={handleProductSelect}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            hasMore = {hasMore}
             loading={loading}
           />
         )}

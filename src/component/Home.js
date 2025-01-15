@@ -337,7 +337,10 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                                       disabled
                                        size="small"
                                       sx={{
-                                        width: "80%",
+                                        width: {
+                                          xs: "55%", 
+                                          sm: "80%",  
+                                        },
                                         marginRight: "30px",
                                       }}
                                       InputProps={{
@@ -350,6 +353,9 @@ const handleAddSelectedProducts = (rowIndex, products) => {
                                       onClick={() =>
                                         handleRemoveVariant(idx, variant.id)
                                       }
+                                      sx={{
+                                        visibility: product.variants.length > 1 ? "visible" : "hidden", 
+                                      }}
                                     >
                                       <Close />
                                     </IconButton>
